@@ -2,7 +2,7 @@
 
 **AI-Powered Codebase Onboarding Tool**
 
-There are hundreds of repo analyzers out there. Most tell you what a codebase does. RepoSight tells you if YOU belong in it — your fit score, your roadmap, your first week. Built with [IBM Bob IDE](https://www.ibm.com/products/watsonx-code-assistant) for the IBM Bob Hackathon 2026. As a development partner, not just a coding assistant, helping developers understand any GitHub repository in 30 seconds using AI analysis.
+There are hundreds of repo analyzers out there. Most tell you what a codebase does. RepoSight tells you if YOU belong in it , your fit score, your roadmap, your first week. Built with [IBM Bob IDE](https://www.ibm.com/products/watsonx-code-assistant) for the IBM Bob Hackathon 2026. As a development partner, not just a coding assistant, helping developers understand any GitHub repository in 30 seconds using AI analysis.
 
 ![RepoSight Banner](https://img.shields.io/badge/Built%20with-IBM%20Bob-blue?style=for-the-badge)
 ![Groq AI](https://img.shields.io/badge/Powered%20by-Groq%20AI-orange?style=for-the-badge)
