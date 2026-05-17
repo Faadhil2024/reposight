@@ -495,10 +495,96 @@
 
   .error-msg.active { display: block; }
 
+  /* Onboarding Roadmap Timeline */
+  .roadmap-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 16px;
+  }
+
+  .timeline-phase {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .timeline-marker {
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    text-align: center;
+    line-height: 1.2;
+    position: relative;
+  }
+
+  .timeline-marker.day1 {
+    background: rgba(0,229,255,0.15);
+    border: 2px solid var(--accent);
+    color: var(--accent);
+  }
+
+  .timeline-marker.days2-3 {
+    background: rgba(124,58,237,0.15);
+    border: 2px solid var(--accent2);
+    color: #a78bfa;
+  }
+
+  .timeline-marker.week1 {
+    background: rgba(16,185,129,0.15);
+    border: 2px solid var(--accent3);
+    color: var(--accent3);
+  }
+
+  .timeline-marker::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 20px;
+    background: var(--border);
+  }
+
+  .timeline-phase:last-child .timeline-marker::after {
+    display: none;
+  }
+
+  .timeline-content {
+    flex: 1;
+    padding-top: 8px;
+  }
+
+  .timeline-title {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .timeline-description {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+
   @media (max-width: 600px) {
     .cards-grid { grid-template-columns: 1fr; }
     .input-row { flex-direction: column; }
     .api-row { flex-direction: column; }
+    
+    .timeline-marker {
+      width: 50px;
+      height: 50px;
+      font-size: 11px;
+    }
   }
 </style>
 </head>
@@ -618,13 +704,31 @@
         <div class="card-content" id="keyFiles">—</div>
       </div>
 
+      <!-- Developer Fit Score -->
+      <div class="card" style="animation-delay:0.3s">
+        <div class="card-header">
+          <div class="card-icon purple">👤</div>
+          <div class="card-title">Developer Fit Score</div>
+        </div>
+        <div class="card-content" id="developerFit">—</div>
+      </div>
+
       <!-- Getting Started -->
-      <div class="card full" style="animation-delay:0.3s">
+      <div class="card full" style="animation-delay:0.35s">
         <div class="card-header">
           <div class="card-icon cyan">🚀</div>
           <div class="card-title">How to Get Started</div>
         </div>
         <div class="steps" id="gettingStarted"></div>
+      </div>
+
+      <!-- Onboarding Roadmap -->
+      <div class="card full" style="animation-delay:0.4s">
+        <div class="card-header">
+          <div class="card-icon orange">📅</div>
+          <div class="card-title">Onboarding Roadmap</div>
+        </div>
+        <div class="roadmap-timeline" id="onboardingRoadmap"></div>
       </div>
 
     </div>
@@ -636,6 +740,12 @@
 </div>
 
 <script>
+  // ============================================================================
+  // REPOSIGHT - AI-Powered Codebase Onboarding Tool
+  // Built with IBM Bob IDE for IBM Bob Hackathon 2026
+  // ============================================================================
+
+  // Loading messages displayed during analysis
   const LOADING_MESSAGES = [
     'Fetching repository metadata...',
     'Reading file structure...',
@@ -644,10 +754,18 @@
     'Almost done...'
   ];
 
+  /**
+   * Sets an example repository URL in the input field
+   * @param {string} url - The GitHub repository URL to set
+   */
   function setExample(url) {
     document.getElementById('repoUrl').value = url;
   }
 
+  /**
+   * Resets the application to initial state
+   * Clears results, loading state, errors, and input field
+   */
   function reset() {
     document.getElementById('results').classList.remove('active');
     document.getElementById('loading').classList.remove('active');
@@ -656,6 +774,10 @@
     document.getElementById('analyzeBtn').disabled = false;
   }
 
+  /**
+   * Displays an error message to the user
+   * @param {string} msg - The error message to display
+   */
   function showError(msg) {
     const el = document.getElementById('errorMsg');
     el.textContent = msg;
@@ -664,6 +786,11 @@
     document.getElementById('analyzeBtn').disabled = false;
   }
 
+  /**
+   * Parses a GitHub URL to extract owner and repository name
+   * @param {string} url - The GitHub URL to parse
+   * @returns {Object|null} Object with owner and repo properties, or null if invalid
+   */
   function parseGitHubUrl(url) {
     try {
       const match = url.match(/github\.com\/([^\/]+)\/([^\/\s]+)/);
@@ -672,9 +799,18 @@
     } catch { return null; }
   }
 
+  /**
+   * Fetches comprehensive data from GitHub API for a repository
+   * Makes parallel requests for metadata, contents, languages, and README
+   * @param {string} owner - GitHub repository owner/organization
+   * @param {string} repo - Repository name
+   * @returns {Promise<Object>} Object containing repoData, contents, languages, and readme
+   * @throws {Error} If repository is not found or inaccessible
+   */
   async function fetchRepoData(owner, repo) {
     const headers = { 'Accept': 'application/vnd.github.v3+json' };
 
+    // Fetch multiple endpoints in parallel for better performance
     const [repoRes, contentsRes, languagesRes] = await Promise.all([
       fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers }),
       fetch(`https://api.github.com/repos/${owner}/${repo}/contents`, { headers }),
@@ -687,12 +823,13 @@
     const contents = contentsRes.ok ? await contentsRes.json() : [];
     const languages = languagesRes.ok ? await languagesRes.json() : {};
 
-    // Try to get README
+    // Try to get README content (base64 encoded, needs decoding)
     let readme = '';
     try {
       const readmeRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/readme`, { headers });
       if (readmeRes.ok) {
         const readmeData = await readmeRes.json();
+        // Decode base64 and limit to first 3000 characters
         readme = atob(readmeData.content.replace(/\n/g, '')).slice(0, 3000);
       }
     } catch {}
@@ -700,13 +837,26 @@
     return { repoData, contents, languages, readme };
   }
 
+  /**
+   * Analyzes repository data using Groq AI (LLaMA 3.1 model)
+   * Sends repository information to AI and receives structured analysis
+   * @param {string} apiKey - Groq API key for authentication
+   * @param {Object} repoData - Repository metadata from GitHub
+   * @param {Array} contents - Repository file/folder structure
+   * @param {Object} languages - Programming languages used in the repo
+   * @param {string} readme - README content (first 3000 chars)
+   * @returns {Promise<Object>} Parsed JSON analysis with insights
+   * @throws {Error} If API call fails or response cannot be parsed
+   */
   async function analyzeWithGroq(apiKey, repoData, contents, languages, readme) {
+    // Format file list with icons for better readability
     const fileList = Array.isArray(contents)
       ? contents.map(f => `${f.type === 'dir' ? '📁' : '📄'} ${f.name}`).join('\n')
       : '';
 
     const langList = Object.keys(languages).join(', ') || 'Unknown';
 
+    // Construct detailed prompt for AI analysis
     const prompt = `You are an expert software engineer analyzing a GitHub repository for a new developer joining the team.
 
 Repository: ${repoData.full_name}
@@ -735,9 +885,21 @@ Generate a JSON response with EXACTLY this structure (no markdown, just raw JSON
     "Second step",
     "Third step",
     "Fourth step - where to start reading the code"
-  ]
+  ],
+  "developerFit": {
+    "requiredSkills": ["skill1", "skill2", "skill3"],
+    "niceToHave": ["skill1", "skill2"],
+    "experienceLevel": "Junior/Mid/Senior",
+    "timeToProductivity": "X days/weeks"
+  },
+  "onboardingRoadmap": {
+    "day1": "What to read/understand on day 1",
+    "days2to3": "Setup and exploration activities for days 2-3",
+    "week1": "Goal for making first contribution in week 1"
+  }
 }`;
 
+    // Call Groq API with OpenAI-compatible format
     const response = await fetch(
       'https://api.groq.com/openai/v1/chat/completions',
       {
@@ -747,15 +909,15 @@ Generate a JSON response with EXACTLY this structure (no markdown, just raw JSON
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: 'llama-3.1-8b-instant',
+          model: 'llama-3.1-8b-instant',  // Fast LLaMA model
           messages: [
             {
               role: 'user',
               content: prompt
             }
           ],
-          temperature: 0.3,
-          max_tokens: 1024
+          temperature: 0.3,  // Lower temperature for more consistent output
+          max_tokens: 1024   // Limit response length
         })
       }
     );
@@ -767,16 +929,26 @@ Generate a JSON response with EXACTLY this structure (no markdown, just raw JSON
 
     const data = await response.json();
     let text = data.choices?.[0]?.message?.content || '';
+    // Remove markdown code blocks if present
     text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     
     // Extract JSON object from response (handles text before/after JSON)
+    // This regex finds the first complete JSON object in the response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('Could not parse AI response');
     return JSON.parse(jsonMatch[0]);
   }
 
+  /**
+   * Renders the analysis results in the UI
+   * Populates all cards with data from AI analysis
+   * @param {Object} parsed - Parsed JSON analysis from AI
+   * @param {Object} repoData - Repository metadata from GitHub
+   * @param {string} owner - Repository owner
+   * @param {string} repo - Repository name
+   */
   function renderResults(parsed, repoData, owner, repo) {
-    // Header
+    // Display repository name and metadata in header
     document.getElementById('repoNameDisplay').textContent = `${owner}/${repo}`;
     document.getElementById('repoMetaDisplay').textContent =
       `⭐ ${repoData.stargazers_count?.toLocaleString()} stars · ${repoData.language || 'Multiple languages'} · ${repoData.license?.name || 'No license'}`;
@@ -806,6 +978,27 @@ Generate a JSON response with EXACTLY this structure (no markdown, just raw JSON
     document.getElementById('keyFiles').innerHTML =
       parsed.keyFiles.split('\n').filter(Boolean).join('<br>');
 
+    // Developer Fit Score
+    if (parsed.developerFit) {
+      const fit = parsed.developerFit;
+      document.getElementById('developerFit').innerHTML = `
+        <div style="margin-bottom:12px">
+          <strong style="color:var(--accent)">Required Skills:</strong><br>
+          ${fit.requiredSkills?.map(s => `<span class="tag cyan" style="margin:4px 4px 4px 0">${s}</span>`).join('') || 'Not specified'}
+        </div>
+        <div style="margin-bottom:12px">
+          <strong style="color:var(--accent3)">Nice to Have:</strong><br>
+          ${fit.niceToHave?.map(s => `<span class="tag green" style="margin:4px 4px 4px 0">${s}</span>`).join('') || 'Not specified'}
+        </div>
+        <div style="margin-bottom:8px">
+          <strong>Experience Level:</strong> ${fit.experienceLevel || 'Any'}
+        </div>
+        <div>
+          <strong>Time to Productivity:</strong> ${fit.timeToProductivity || 'Varies'}
+        </div>
+      `;
+    }
+
     // Getting started
     document.getElementById('gettingStarted').innerHTML = parsed.gettingStarted
       .map((s, i) => `
@@ -815,20 +1008,56 @@ Generate a JSON response with EXACTLY this structure (no markdown, just raw JSON
         </div>
       `).join('');
 
+    // Onboarding Roadmap
+    if (parsed.onboardingRoadmap) {
+      const roadmap = parsed.onboardingRoadmap;
+      document.getElementById('onboardingRoadmap').innerHTML = `
+        <div class="timeline-phase">
+          <div class="timeline-marker day1">Day<br>1</div>
+          <div class="timeline-content">
+            <div class="timeline-title">First Day</div>
+            <div class="timeline-description">${roadmap.day1 || 'Get familiar with the codebase'}</div>
+          </div>
+        </div>
+        <div class="timeline-phase">
+          <div class="timeline-marker days2-3">Days<br>2-3</div>
+          <div class="timeline-content">
+            <div class="timeline-title">Setup & Exploration</div>
+            <div class="timeline-description">${roadmap.days2to3 || 'Set up development environment and explore'}</div>
+          </div>
+        </div>
+        <div class="timeline-phase">
+          <div class="timeline-marker week1">Week<br>1</div>
+          <div class="timeline-content">
+            <div class="timeline-title">First Contribution</div>
+            <div class="timeline-description">${roadmap.week1 || 'Make your first contribution'}</div>
+          </div>
+        </div>
+      `;
+    }
+
     document.getElementById('loading').classList.remove('active');
     document.getElementById('results').classList.add('active');
   }
 
+  /**
+   * Main analysis function - orchestrates the entire workflow
+   * Validates inputs, fetches GitHub data, analyzes with AI, and displays results
+   * Handles all error cases and loading states
+   */
   async function analyze() {
     const url = document.getElementById('repoUrl').value.trim();
     const apiKey = document.getElementById('apiKey').value.trim();
 
+    // Reset UI state
     document.getElementById('errorMsg').classList.remove('active');
     document.getElementById('results').classList.remove('active');
 
+    // Validate inputs
     if (!url) return showError('Please enter a GitHub repository URL');
     if (!apiKey) return showError('Please enter your Groq API key (free at console.groq.com)');
 
+    // Parse and validate GitHub URL
     const parsed = parseGitHubUrl(url);
     if (!parsed) return showError('Invalid GitHub URL. Use format: https://github.com/owner/repo');
 
@@ -836,9 +1065,10 @@ Generate a JSON response with EXACTLY this structure (no markdown, just raw JSON
     const btn = document.getElementById('analyzeBtn');
     btn.disabled = true;
 
+    // Show loading state
     document.getElementById('loading').classList.add('active');
 
-    // Animate loading steps
+    // Animate loading steps for better UX
     let stepIdx = 0;
     const stepEl = document.getElementById('loadingStep');
     const stepInterval = setInterval(() => {
@@ -848,19 +1078,30 @@ Generate a JSON response with EXACTLY this structure (no markdown, just raw JSON
     }, 1200);
 
     try {
+      // Fetch repository data from GitHub
       const { repoData, contents, languages, readme } = await fetchRepoData(owner, repo);
+      // Analyze with Groq AI
       const analysis = await analyzeWithGroq(apiKey, repoData, contents, languages, readme);
       clearInterval(stepInterval);
+      // Display results
       renderResults(analysis, repoData, owner, repo);
     } catch (err) {
       clearInterval(stepInterval);
       showError(`Error: ${err.message}`);
     } finally {
+      // Re-enable button regardless of success/failure
       btn.disabled = false;
     }
   }
 
-  // Enter key support
+  // ============================================================================
+  // EVENT LISTENERS
+  // ============================================================================
+
+  /**
+   * Initialize event listeners when DOM is ready
+   * Adds Enter key support for both input fields
+   */
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('repoUrl').addEventListener('keydown', e => {
       if (e.key === 'Enter') analyze();
