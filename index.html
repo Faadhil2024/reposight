@@ -344,7 +344,19 @@
     border-radius: 14px;
     padding: 22px;
     transition: border-color 0.2s;
-    animation: fadeUp 0.5s ease both;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  .card.animate {
+    animation: slideUpFade 0.6s ease forwards;
+  }
+
+  @keyframes slideUpFade {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .card:hover { border-color: rgba(0,229,255,0.2); }
@@ -586,6 +598,139 @@
       font-size: 11px;
     }
   }
+
+  /* Codebase DNA Section */
+  .dna-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 32px;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  .dna-section.animate {
+    animation: slideUpFade 0.6s ease forwards;
+  }
+
+  .dna-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .dna-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .dna-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .dna-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 48px;
+    flex-wrap: wrap;
+  }
+
+  .donut-container {
+    position: relative;
+    width: 240px;
+    height: 240px;
+  }
+
+  .donut-chart {
+    transform: rotate(-90deg);
+    filter: drop-shadow(0 0 20px rgba(0,229,255,0.3));
+  }
+
+  .donut-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  .donut-total {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .donut-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 4px;
+  }
+
+  .language-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 300px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+
+  .legend-item:hover {
+    background: rgba(255,255,255,0.04);
+  }
+
+  .legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .legend-info {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .legend-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .legend-percent {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Animated number counter */
+  .animated-number {
+    display: inline-block;
+  }
 </style>
 </head>
 <body>
@@ -594,7 +739,7 @@
   <header>
     <div class="badge">
       <div class="badge-dot"></div>
-      POWERED BY IBM BOB + GEMINI AI
+      POWERED BY IBM BOB + GROQ AI
     </div>
     <h1>Repo<span>Sight</span></h1>
     <p class="subtitle">// paste a github url. understand any codebase in 30 seconds.</p>
@@ -615,7 +760,7 @@
       </button>
     </div>
 
-    <label class="input-label" style="margin-top:16px">Gemini API Key</label>
+    <label class="input-label" style="margin-top:16px">Groq API Key</label>
     <div class="api-row">
       <input
         type="password"
@@ -652,6 +797,31 @@
         <div class="repo-meta" id="repoMetaDisplay"></div>
       </div>
       <button class="reset-btn" onclick="reset()">← New Repo</button>
+    </div>
+
+    <!-- Codebase DNA Visualization -->
+    <div class="dna-section" id="dnaSection">
+      <div class="dna-header">
+        <div class="dna-title">
+          <span>🧬</span>
+          <span>Codebase DNA</span>
+        </div>
+        <div class="dna-subtitle">Language composition breakdown</div>
+      </div>
+      <div class="dna-content">
+        <div class="donut-container">
+          <svg class="donut-chart" width="240" height="240" viewBox="0 0 240 240" id="donutChart">
+            <!-- SVG will be populated by JavaScript -->
+          </svg>
+          <div class="donut-center">
+            <div class="donut-total" id="donutTotal">—</div>
+            <div class="donut-label">Languages</div>
+          </div>
+        </div>
+        <div class="language-legend" id="languageLegend">
+          <!-- Legend items will be populated by JavaScript -->
+        </div>
+      </div>
     </div>
 
     <div class="cards-grid">
@@ -735,7 +905,7 @@
   </div>
 
   <div class="powered-by">
-    built with <span>IBM Bob IDE</span> · groq ai · github api &nbsp;·&nbsp; ibm bob hackathon 2026
+    built with <span>IBM Bob IDE</span> · Groq ai · Github api &nbsp;·&nbsp; IBM bob hackathon 2026
   </div>
 </div>
 
@@ -764,7 +934,7 @@
 
   /**
    * Resets the application to initial state
-   * Clears results, loading state, errors, and input field
+   * Clears results, loading state, errors, input field, and animations
    */
   function reset() {
     document.getElementById('results').classList.remove('active');
@@ -772,6 +942,12 @@
     document.getElementById('errorMsg').classList.remove('active');
     document.getElementById('repoUrl').value = '';
     document.getElementById('analyzeBtn').disabled = false;
+    
+    // Reset animations
+    document.getElementById('dnaSection').classList.remove('animate');
+    document.querySelectorAll('.card').forEach(card => {
+      card.classList.remove('animate');
+    });
   }
 
   /**
@@ -946,12 +1122,16 @@ Generate a JSON response with EXACTLY this structure (no markdown, just raw JSON
    * @param {Object} repoData - Repository metadata from GitHub
    * @param {string} owner - Repository owner
    * @param {string} repo - Repository name
+   * @param {Object} languages - Language breakdown from GitHub API
    */
-  function renderResults(parsed, repoData, owner, repo) {
+  function renderResults(parsed, repoData, owner, repo, languages) {
     // Display repository name and metadata in header
     document.getElementById('repoNameDisplay').textContent = `${owner}/${repo}`;
     document.getElementById('repoMetaDisplay').textContent =
       `⭐ ${repoData.stargazers_count?.toLocaleString()} stars · ${repoData.language || 'Multiple languages'} · ${repoData.license?.name || 'No license'}`;
+
+    // Render Codebase DNA visualization
+    renderCodebaseDNA(languages);
 
     // What it does
     document.getElementById('whatItDoes').textContent = parsed.whatItDoes;
@@ -965,12 +1145,12 @@ Generate a JSON response with EXACTLY this structure (no markdown, just raw JSON
     // Architecture
     document.getElementById('architecture').textContent = parsed.architecture;
 
-    // Complexity score
+    // Complexity score with animation
     const score = parsed.complexityScore;
     const level = score < 40 ? 'low' : score < 70 ? 'medium' : 'high';
     const circle = document.getElementById('scoreCircle');
-    circle.textContent = score;
     circle.className = `score-circle ${level}`;
+    animateNumber(circle, 0, score, 1500);
     document.getElementById('scoreLabel').innerHTML =
       `<strong>${level.toUpperCase()} COMPLEXITY</strong><br>${parsed.complexityReason}`;
 
@@ -1036,8 +1216,142 @@ Generate a JSON response with EXACTLY this structure (no markdown, just raw JSON
       `;
     }
 
+    // Show results with staggered card animations
     document.getElementById('loading').classList.remove('active');
     document.getElementById('results').classList.add('active');
+    
+    // Animate DNA section
+    setTimeout(() => {
+      document.getElementById('dnaSection').classList.add('animate');
+    }, 100);
+    
+    // Animate cards with stagger
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+      setTimeout(() => {
+        card.classList.add('animate');
+      }, 300 + (index * 100));
+    });
+  }
+
+  /**
+   * Renders the Codebase DNA donut chart visualization
+   * Creates an animated SVG donut chart showing language breakdown
+   * @param {Object} languages - Language data from GitHub API (language: bytes)
+   */
+  function renderCodebaseDNA(languages) {
+    if (!languages || Object.keys(languages).length === 0) {
+      document.getElementById('dnaSection').style.display = 'none';
+      return;
+    }
+
+    // Calculate total bytes and percentages
+    const total = Object.values(languages).reduce((sum, bytes) => sum + bytes, 0);
+    const languageData = Object.entries(languages)
+      .map(([name, bytes]) => ({
+        name,
+        bytes,
+        percentage: ((bytes / total) * 100).toFixed(1)
+      }))
+      .sort((a, b) => b.bytes - a.bytes)
+      .slice(0, 6); // Top 6 languages
+
+    // Language colors
+    const colors = [
+      '#00e5ff', // cyan
+      '#7c3aed', // purple
+      '#10b981', // green
+      '#f59e0b', // orange
+      '#ef4444', // red
+      '#3b82f6'  // blue
+    ];
+
+    // SVG donut chart parameters
+    const size = 240;
+    const strokeWidth = 40;
+    const radius = (size - strokeWidth) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const center = size / 2;
+
+    // Create SVG segments
+    let currentAngle = 0;
+    const svg = document.getElementById('donutChart');
+    svg.innerHTML = '';
+
+    languageData.forEach((lang, index) => {
+      const percentage = parseFloat(lang.percentage);
+      const segmentLength = (percentage / 100) * circumference;
+      const offset = circumference - segmentLength;
+
+      // Create circle segment
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', center);
+      circle.setAttribute('cy', center);
+      circle.setAttribute('r', radius);
+      circle.setAttribute('fill', 'none');
+      circle.setAttribute('stroke', colors[index]);
+      circle.setAttribute('stroke-width', strokeWidth);
+      circle.setAttribute('stroke-dasharray', `${segmentLength} ${circumference}`);
+      circle.setAttribute('stroke-dashoffset', -currentAngle);
+      circle.setAttribute('stroke-linecap', 'round');
+      
+      // Animate the segment
+      circle.style.strokeDashoffset = circumference;
+      circle.style.transition = `stroke-dashoffset 1.5s ease ${index * 0.1}s`;
+      
+      svg.appendChild(circle);
+      
+      // Trigger animation
+      setTimeout(() => {
+        circle.style.strokeDashoffset = -currentAngle;
+      }, 50);
+
+      currentAngle += segmentLength;
+    });
+
+    // Update center text
+    document.getElementById('donutTotal').textContent = languageData.length;
+
+    // Create legend
+    const legend = document.getElementById('languageLegend');
+    legend.innerHTML = languageData.map((lang, index) => `
+      <div class="legend-item">
+        <div class="legend-color" style="background: ${colors[index]}"></div>
+        <div class="legend-info">
+          <div class="legend-name">${lang.name}</div>
+          <div class="legend-percent">${lang.percentage}%</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  /**
+   * Animates a number from start to end value
+   * Used for complexity score animation
+   * @param {HTMLElement} element - Element to update
+   * @param {number} start - Starting number
+   * @param {number} end - Ending number
+   * @param {number} duration - Animation duration in ms
+   */
+  function animateNumber(element, start, end, duration) {
+    const startTime = performance.now();
+    
+    function update(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Easing function (ease-out)
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(start + (end - start) * easeOut);
+      
+      element.textContent = current;
+      
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      }
+    }
+    
+    requestAnimationFrame(update);
   }
 
   /**
@@ -1083,8 +1397,8 @@ Generate a JSON response with EXACTLY this structure (no markdown, just raw JSON
       // Analyze with Groq AI
       const analysis = await analyzeWithGroq(apiKey, repoData, contents, languages, readme);
       clearInterval(stepInterval);
-      // Display results
-      renderResults(analysis, repoData, owner, repo);
+      // Display results with language data for DNA visualization
+      renderResults(analysis, repoData, owner, repo, languages);
     } catch (err) {
       clearInterval(stepInterval);
       showError(`Error: ${err.message}`);
